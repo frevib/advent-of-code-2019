@@ -1,4 +1,4 @@
-module Euler048 where
+module Day01 where
 
 import Data.Char
 import Data.List.Split
@@ -10,26 +10,32 @@ main = do
     print $ "Star 1: "
     print $ input
         & map read 
-        & map ((subtract 2).(`div` 3))
-        & foldl (+) 0 
-    print $ "Star 2: "
-    print $ input 
-        & map read 
         & map calculateFuel
-        & foldl (+) 0
+        & foldl (+) 0 
+    print $ "Star 2: " 
+        ++ show (
+            input
+            & map read
+            & map calculateFuelSeries
+            & foldl (+) 0
+        )
     
 
 calculateFuel :: Int -> Int
-calculateFuel x 
+calculateFuel x = ((subtract 2).(`div` 3)) x
+
+calculateFuelSeries :: Int -> Int
+calculateFuelSeries x 
     | x < 1 = 0
     | otherwise = 
-        let fuel = ((subtract 2).(`div` 3)) x
-        in (noZero fuel) + (calculateFuel fuel)
+        let fuel = calculateFuel x
+        in (noNegative fuel) + (calculateFuelSeries fuel)
 
-noZero :: Int -> Int
-noZero x
+noNegative :: Int -> Int
+noNegative x
     | x < 0 = 0
     | otherwise = x
+
 
 debug = flip trace
 
