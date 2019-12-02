@@ -11,7 +11,9 @@ main = do
     -- let contentList = ["1","0","0","3"]
     -- let contentList = ["1","1","1","4","99","5","6","0","99"]
     let contentList = splitOn "," content
-    print $ "star 1: " ++ show (head (processCode 0 $ map read contentList))
+    let (x : y : z : xs) = contentList
+    let contentListReplace = (x : "12" : "2" : xs)
+    print $ "star 1: " ++ show (head (processCode 0 $ map read contentListReplace))
 
 
 processCode :: Int -> [Int] -> [Int]
