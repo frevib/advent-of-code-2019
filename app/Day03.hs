@@ -10,6 +10,10 @@ countUntil needle steps
     | (head steps) == needle = 1
     | otherwise = 1 + countUntil needle (drop 1 steps)
 
+    
+createList00 :: [(Int, Int)] -> [(Int, Int)]
+createList00 steps = createList (0, 0) steps
+
 
 createList :: (Int, Int) -> [(Int, Int)] -> [(Int, Int)]
 createList _ [] = []
@@ -32,8 +36,8 @@ generatePath currentLocation step =
         else [ (curX, -y + curY) | y <- [1..(-1 * y)] ]
 
 
-convertToVector :: String -> (Int, Int)
-convertToVector step =
+convertToTuple :: String -> (Int, Int)
+convertToTuple step =
     let direction = take 1 step
     in
         if direction == "U"
@@ -52,17 +56,22 @@ main = do
         firstWire = (splitOn "," (steps !! 0))
         secondWire = (splitOn "," (steps !! 1))
 
-        firstVectors = map convertToVector firstWire
-        secondVectors = map convertToVector secondWire
+        firstCoords = map convertToTuple firstWire
+        secondCoords = map convertToTuple secondWire
 
-        firstSet = Set.fromList (createList (0, 0) firstVectors)
-        secondSet = Set.fromList (createList (0, 0) secondVectors)
+        firstPath = (createList00 firstCoords)
+        secondPath = (createList00 secondCoords)
 
-        setIntersection = Set.intersection firstSet secondSet
+        commonPathCoords = 
+            Set.intersection (Set.fromList firstPath) (Set.fromList secondPath)
 
-        firstAmountOfSteps = map (\x -> countUntil x (createList (0, 0) firstVectors)) (Set.toList setIntersection)
-        secondAmountOfSteps = map (\x -> countUntil x (createList (0, 0) secondVectors)) (Set.toList setIntersection)
+        firstAmountOfSteps =
+             map (\x -> countUntil x (createList00 firstCoords)) (Set.toList commonPathCoords)
+        secondAmountOfSteps =
+             map (\x -> countUntil x (createList00 secondCoords)) (Set.toList commonPathCoords)
 
-    print $ "star1: " ++ show (minimum $ map (\x -> abs (fst x) + abs(snd x)) (Set.toList setIntersection))
-    print $ "star2: " ++ show (minimum (zipWith (+) firstAmountOfSteps secondAmountOfSteps))
+    print $ "star1: " 
+        ++ show (minimum $ map (\x -> abs (fst x) + abs(snd x)) (Set.toList commonPathCoords))
+    print $ "star2: " 
+        ++ show (minimum (zipWith (+) firstAmountOfSteps secondAmountOfSteps))
 

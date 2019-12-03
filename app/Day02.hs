@@ -8,20 +8,17 @@ import Debug.Trace
 main :: IO ()
 main = do
     content <- readFile "resources/day02.txt"
-    -- let contentList = ["1","0","0","3"]
-    -- let contentList = ["1","1","1","4","99","5","6","0","99"]
     let contentList = map read (splitOn "," content)
-    let (x : y : z : xs) = contentList
-    let contentListReplace = (x : 12 : 2 : xs)
-    print $ "star 1: " ++ show (head (processCode 0 $ contentListReplace))
-    
-    print 
-        $ "star 2: " 
+        (x : y : z : xs) = contentList
+        contentListReplace = (x : 12 : 2 : xs)
+
+    print $ "star 1: " ++ show (head (processCode 0 $ contentListReplace)) 
+    print $ "star 2: " 
         ++ let (noun : verb) = (concat (filter (\x ->
                 let newList = (head contentList) : x ++ (drop 3 contentList)
                 in (head (processCode 0 $ newList)) == 19690720
                 ) [[x, y] | x <- [1..99], y <- [1..99]]))
-        in show (noun * 100 + (verb !! 0))
+            in show (noun * 100 + (verb !! 0))
 
 
 processCode :: Int -> [Int] -> [Int]
