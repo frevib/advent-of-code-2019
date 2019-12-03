@@ -14,10 +14,10 @@ main = do
 
     print $ "star 1: " ++ show (head (processCode 0 $ contentListReplace)) 
     print $ "star 2: " 
-        ++ let (noun : verb) = (concat (filter (\x ->
+        ++ let (noun : verb) = concat (filter (\x ->
                 let newList = (head contentList) : x ++ (drop 3 contentList)
                 in (head (processCode 0 $ newList)) == 19690720
-                ) [[x, y] | x <- [1..99], y <- [1..99]]))
+                ) [[x, y] | x <- [1..99], y <- [1..99]])
             in show (noun * 100 + (verb !! 0))
 
 
