@@ -14,14 +14,9 @@ main = do
         max = read (inputClean !! 1) :: Int
         rangeString = map show [min..max]
      
-    print $ "star 1: " 
-        ++ show 
-            (length 
-                (filter (\x -> 
-                    hasAdjacentNumbers x && isIncreasing x
-                    ) rangeString
-                )
-            )
+    print $ 
+        "star 1: " 
+            ++ show (length (filter (\x -> hasAdjacentNumbers x && isIncreasing x) rangeString))
     print $ 
         "star 2: " 
         ++ show 
