@@ -1,4 +1,4 @@
-module Day02 where
+module Day05 where
 
 import Data.Char
 import Data.List.Split
@@ -45,6 +45,7 @@ processCode input output offset program
                 then
                     let (a : b : xs) = drop offset program
                         newProgram = replaceNth b input program
+                        
                     in 
                         processCode 0 output (offset + 2) newProgram
             else if opcode == 4
