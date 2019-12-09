@@ -13,6 +13,11 @@ main :: IO ()
 main = do
     content <- readFile "resources/day07.txt"
     let program = map read (splitOn "," content)
+
+    let test1 = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99] ++ (replicate 30000 0)
+        
+
+
     let phasesTestStar2 = [8,7,6,5]
     let phases = phasesTestStar2
     let programStates = [program, program, program, program, program]
@@ -44,12 +49,7 @@ processCode phases amp input output offset program instructionPointers programSt
             case opcode of
                 1 -> sum1 program offset phases amp input output instructionPointers programStates
                 2 -> multiply program offset phases amp input output instructionPointers programStates
-                3 ->
-                    let (a : b : xs) = drop offset program
-                        inputValue = head input
-                        newProgram = replaceNth b inputValue program
-                    in 
-                        processCode phases amp (drop 1 input) output (offset + 2) newProgram instructionPointers programStates
+                3 -> input' program offset phases amp input output instructionPointers programStates
                 4->
                     let (a : b : xs) = drop offset program
                         phase = take 1 phases
@@ -74,6 +74,15 @@ processCode phases amp input output offset program instructionPointers programSt
                 6 -> jumpIfFalse program offset phases amp input output instructionPointers programStates 
                 7 -> lessThan program offset phases amp input output instructionPointers programStates
                 8 -> equals program offset phases amp input output instructionPointers programStates
+
+input' :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int               
+input' program ip phases amp input output instructionPointers programStates =
+    let 
+        param1 = (drop ip program) !! 1
+        newProgram = replaceNth param1 inputValue program
+        inputValue = head input
+    in 
+        processCode phases amp (drop 1 input) output (ip + 2) newProgram instructionPointers programStates
 
 
 lessThan :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int 
@@ -164,10 +173,5 @@ replaceNth _ _ [] = []
 replaceNth n newVal (x:xs)
     | n == 0 = newVal:xs
     | otherwise = x:replaceNth (n-1) newVal xs
-
-
-digits :: Int -> [Int]
-digits 0 = []
-digits number = digits (number `div` 10) ++ [number `mod` 10]
 
 debug = flip trace
