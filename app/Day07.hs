@@ -43,14 +43,6 @@ processCode phases amp input output offset program instructionPointers programSt
         in
             case opcode of
                 1 -> sum1 program offset phases amp input output instructionPointers programStates
-                    -- let instructionList = drop offset program
-                    --     (a : b : c : d : xs) = instructionList
-                    --     calculated = 
-                    --         executeArithmeticInstruction instructionList program (+) modeParam1 modeParam2
-
-                    --     newProgram = replaceNth d calculated program
-                    -- in 
-                    --     processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
                 2 -> multiply program offset phases amp input output instructionPointers programStates
                 3 ->
                     let (a : b : xs) = drop offset program
@@ -78,87 +70,52 @@ processCode phases amp input output offset program instructionPointers programSt
                             --     ++ "\nnextAmp: " ++ show nextAmp
                             --     ++ "\nnextProgram: " ++ show nextProgram
                             --     ++ "\ninstruction pointers: " ++ show instructionPointers)
-            -- Jump if True
-                5 -> executeBinaryOperator phases amp program instructionPointers (/=) offset input output modeParam1 modeParam2 programStates
-            -- Jump if False
-                6 -> executeBinaryOperator phases amp program instructionPointers (==) offset input output modeParam1 modeParam2 programStates
-            -- Less than
-                7 -> executeCompareOperator phases amp program instructionPointers (<) offset input output modeParam1 modeParam2 programStates
-            -- Equal
-                8 -> executeCompareOperator phases amp program instructionPointers (==) offset input output modeParam1 modeParam2 programStates
+                5 -> jumpIfTrue program offset phases amp input output instructionPointers programStates
+                6 -> jumpIfFalse program offset phases amp input output instructionPointers programStates 
+                7 -> lessThan program offset phases amp input output instructionPointers programStates
+                8 -> equals program offset phases amp input output instructionPointers programStates
 
 
-executeCompareOperator ::
-    [Int] -> Int -> [Int] -> [Int] -> (Int -> Int -> Bool) -> Int -> [Int] -> Int -> Int -> Int -> [[Int]] -> Int 
-executeCompareOperator phases amp program instructionPointers operation offset input output modeParam1 modeParam2 programStates =
-    let programAtOffset = drop offset program
-        (a : b : c : d : xs) = programAtOffset
+lessThan :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int 
+lessThan program ip phases amp input output instructionPointers programStates =
+    let param1 = getParam program ip 1
+        param2 = getParam program ip 2
+        param3 = (drop ip program) !! 3
+        newValue = if param1 < param2 then 1 else 0
+        newProgram = replaceNth param3 newValue program
     in
-        if modeParam1 == 1 then
-            if modeParam2 == 1 then
-                if operation b c then
-                    let newProgram = replaceNth d 1 program
-                    in processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
-                else 
-                    let newProgram = replaceNth d 0 program
-                    in processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
-            else if modeParam2 == 0 then
-                if operation b (program !! c) then
-                    let newProgram = replaceNth d 1 program
-                    in processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
-                else 
-                    let newProgram = replaceNth d 0 program
-                    in processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
-            else 
-                error $ "--modeParam2 does not exist: " ++ (show modeParam2)
-
-        else if modeParam1 == 0 then
-            if modeParam2 == 1 then
-                if operation (program !! b) c then
-                    let newProgram = replaceNth d 1 program
-                    in processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
-                else 
-                    let newProgram = replaceNth d 0 program
-                    in processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
-            else if modeParam2 == 0 then
-                if operation (program !! b) (program !! c) then
-                    let newProgram = replaceNth d 1 program
-                    in processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
-                else 
-                    let newProgram = replaceNth d 0 program
-                    in processCode phases amp input output (offset + 4) newProgram instructionPointers programStates
-            else 
-                error $ "--modeParam2 does not exist: " ++ (show modeParam2)
-        else 
-            error $ "--modeParam1 does not exist: " ++ (show modeParam1)
+        processCode phases amp input output ip newProgram instructionPointers programStates
 
 
-
-executeBinaryOperator :: 
-    [Int] -> Int -> [Int] -> [Int] -> (Int -> Int -> Bool) -> Int -> [Int] -> Int -> Int -> Int -> [[Int]] -> Int 
-executeBinaryOperator phases amp program instructionPointers operation offset input output modeParam1 modeParam2 programStates =
-    let programAtOffset = drop offset program
-        (a : b : c : xs) = programAtOffset
+equals :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int 
+equals program ip phases amp input output instructionPointers programStates =
+    let param1 = getParam program ip 1
+        param2 = getParam program ip 2
+        param3 = (drop ip program) !! 3
+        newValue = if param1 == param2 then 1 else 0
+        newProgram = replaceNth param3 newValue program
     in
-        if modeParam1 == 0 then
-            if operation (program !! b) 0 then 
-                if modeParam2 == 0
-                    then processCode phases amp input output (program !! c) program instructionPointers programStates
-                else if modeParam2 == 1
-                    then processCode phases amp input output c program instructionPointers programStates
-                else error $ "--Opcode does not exist: "
-            else processCode phases amp input output (offset + 3) program instructionPointers programStates
+        processCode phases amp input output ip newProgram instructionPointers programStates
 
-        else if modeParam1 == 1 then
-            if operation b 0 then
-                if modeParam2 == 0
-                    then processCode phases amp input output (program !! c) program instructionPointers programStates
-                else if modeParam2 == 1
-                    then processCode phases amp input output c program instructionPointers programStates
-                else error $ "--Opcode does not exist: "
-            else processCode phases amp input output (offset + 3) program instructionPointers programStates
-        else error $ "--modeParam2 does not exist: " ++ (show modeParam2)
 
+jumpIfTrue :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int 
+jumpIfTrue program ip phases amp input output instructionPointers programStates =
+    let param1 = getParam program ip 1
+        param2 = getParam program ip 2
+    in 
+        if param1 /= 0 
+            then processCode phases amp input output param2 program instructionPointers programStates
+        else processCode phases amp input output ip program instructionPointers programStates
+
+
+jumpIfFalse :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int 
+jumpIfFalse program ip phases amp input output instructionPointers programStates =
+    let param1 = getParam program ip 1
+        param2 = getParam program ip 2
+    in 
+        if param1 == 0 
+            then processCode phases amp input output param2 program instructionPointers programStates
+        else processCode phases amp input output ip program instructionPointers programStates
 
 
 getMode :: Int -> Int -> Int
@@ -178,14 +135,13 @@ getParam program ip offset =
             0 -> (program !! (program !! paramOffset))
             1 -> program !! paramOffset
 
+
 sum1 :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int 
 sum1 program ip phases amp input output instructionPointers programStates =
     let param1 = getParam program ip 1
         param2 = getParam program ip 2
         param3 = (drop ip program) !! 3
         calculated = param1 + param2
-
-
         newProgram = replaceNth param3 calculated program
     in
         processCode phases amp input output (ip + 4) newProgram instructionPointers programStates
@@ -198,42 +154,10 @@ multiply program ip phases amp input output instructionPointers programStates =
         param3 = (drop ip program) !! 3
         calculated = param1 * param2
             -- `debug` ("\nhello : " ++ show (ip))
-
-        -- instructionHead = head (drop ip program)
-        -- modeParam1 = getMode instructionHead 1
-        -- modeParam2 = getMode instructionHead 2
-
-        -- instructionList = drop ip program
-        -- (a : b : c : d : xs) = instructionList
-        -- calculated = 
-        --     executeArithmeticInstruction instructionList program (+) modeParam1 modeParam2
-
         newProgram = replaceNth param3 calculated program
     in
         processCode phases amp input output (ip + 4) newProgram instructionPointers programStates
 
-
-
--- executeArithmeticInstruction :: [Int] -> [Int] -> (Int -> Int -> Int) -> Int -> Int -> Int
--- executeArithmeticInstruction instructionList program operation modeParam1 modeParam2 =
---     let (a : b : c : d : xs) = instructionList
---     in 
---         if modeParam1 == 1 then
---             if modeParam2 == 1 then
---                 operation b c
---             else if modeParam2 == 0 then
---                 operation b (program !! c)
---             else 
---                 error $ "--modeParam2 does not exist: " ++ (show modeParam2)
---         else if modeParam1 == 0 then
---             if modeParam2 == 1 then
---                 operation (program !! b) c
---             else if modeParam2 == 0 then
---                 operation (program !! b) (program !! c)
---             else 
---                 error $ "--modeParam2 does not exist: " ++ (show modeParam2)
---         else 
---             error $ "--modeParam1 does not exist: " ++ (show modeParam1)
 
 
 replaceNth :: Int -> a -> [a] -> [a]
