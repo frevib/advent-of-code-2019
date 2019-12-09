@@ -39,41 +39,17 @@ main = do
     print $ "tests: " ++ show test1 ++ ", " ++ show test2
 
 processCode :: [Int] -> Int -> [Int] -> Int -> Int -> [Int] -> [Int] -> [[Int]] -> Int
-processCode phases amp input output offset program instructionPointers programStates
-    | (head (drop offset program)) == 99 = output 
-    | otherwise = 
-        let instructionHead = head (drop offset program) 
-            opcode = instructionHead `mod` 100
-                -- `debug` ("\nopcode : " ++ show ( opcode) )
-        in
-            case opcode of
-                1 -> sum1 program offset phases amp input output instructionPointers programStates
-                2 -> multiply program offset phases amp input output instructionPointers programStates
-                3 -> input' program offset phases amp input output instructionPointers programStates
-                4->
-                    let (a : b : xs) = drop offset program
-                        phase = take 1 phases
-                        producedOutput = (program !! b)
-                        nextAmp = ((amp + 1) `mod` 5)
-
-                        newProgramStates = replaceNth amp program programStates
-                        newInstructionPointers = replaceNth amp (offset + 2) instructionPointers
-
-                        nextProgram = programStates !! nextAmp
-                        instructionPointer = (instructionPointers !! nextAmp)
-                    in 
-                        processCode 
-                            (drop 1 phases) nextAmp (phase ++ [producedOutput]) producedOutput instructionPointer nextProgram newInstructionPointers newProgramStates
-                            -- `debug` ("\noutput: " 
-                            --     ++ show (phase ++ [producedOutput]) 
-                            --     ++ "\noffset: " ++ show offset
-                            --     ++ "\nnextAmp: " ++ show nextAmp
-                            --     ++ "\nnextProgram: " ++ show nextProgram
-                            --     ++ "\ninstruction pointers: " ++ show instructionPointers)
-                5 -> jumpIfTrue program offset phases amp input output instructionPointers programStates
-                6 -> jumpIfFalse program offset phases amp input output instructionPointers programStates 
-                7 -> lessThan program offset phases amp input output instructionPointers programStates
-                8 -> equals program offset phases amp input output instructionPointers programStates
+processCode phases amp input output offset program instructionPointers programStates =
+    case (head (drop offset program)) `mod` 100 of
+        1 -> sum1 program offset phases amp input output instructionPointers programStates
+        2 -> multiply program offset phases amp input output instructionPointers programStates
+        3 -> input' program offset phases amp input output instructionPointers programStates
+        4-> output' program offset phases amp input output instructionPointers programStates
+        5 -> jumpIfTrue program offset phases amp input output instructionPointers programStates
+        6 -> jumpIfFalse program offset phases amp input output instructionPointers programStates 
+        7 -> lessThan program offset phases amp input output instructionPointers programStates
+        8 -> equals program offset phases amp input output instructionPointers programStates
+        99 -> output
 
 input' :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int               
 input' program ip phases amp input output instructionPointers programStates =
@@ -83,6 +59,23 @@ input' program ip phases amp input output instructionPointers programStates =
         inputValue = head input
     in 
         processCode phases amp (drop 1 input) output (ip + 2) newProgram instructionPointers programStates
+
+output' :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int 
+output' program offset phases amp input output instructionPointers programStates =
+    let 
+        (a : b : xs) = drop offset program
+        phase = take 1 phases
+        producedOutput = (program !! b)
+        nextAmp = ((amp + 1) `mod` 5)
+
+        newProgramStates = replaceNth amp program programStates
+        newInstructionPointers = replaceNth amp (offset + 2) instructionPointers
+
+        nextProgram = programStates !! nextAmp
+        instructionPointer = (instructionPointers !! nextAmp)
+    in 
+        processCode 
+            (drop 1 phases) nextAmp (phase ++ [producedOutput]) producedOutput instructionPointer nextProgram newInstructionPointers newProgramStates
 
 
 lessThan :: [Int] -> Int -> [Int] -> Int -> [Int] -> Int -> [Int] -> [[Int]] -> Int 
