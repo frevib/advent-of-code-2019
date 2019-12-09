@@ -37,8 +37,6 @@ processCode phases amp input output offset program instructionPointers programSt
     | otherwise = 
         let instructionHead = head (drop offset program) 
             opcode = instructionHead `mod` 100
-            modeParam1 = getMode instructionHead 1
-            modeParam2 = getMode instructionHead 2
                 -- `debug` ("\nopcode : " ++ show ( opcode) )
         in
             case opcode of
