@@ -8,103 +8,97 @@ import Data.Function
 import Debug.Trace
 
 type Program = [Int] -> Int
+type Base = Int
 
 main :: IO ()
 main = do
-    content <- readFile "resources/day05.txt"
+    content <- readFile "resources/day09.txt"
     let program = map read (splitOn "," content)
+    let input = program ++ (replicate 30000 0)
 
-    -- let test1 = [109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99] ++ (replicate 30000 0)
-        
-    let testEqual = [3,9,8,9,10,9,4,9,99,-1,8]
-    let testLessThan = [3,3,1107,-1,8,3,4,3,99]
-    let jumpTest = [3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9]
+    print $ "star 1: " ++ show (head (processCode 1 [] 0 input 0))
+    print $ "(will take a while) star 2: " ++ show (head (processCode 2 [] 0 input 0))
 
-    let maxValueStar1 = head (processCode 1 [] 0 program)
-    let maxValueStar2 = head (processCode 5 [] 0 program)
 
-    let test1 = maxValueStar1 == 9961446
-    let test2 = maxValueStar2 == 742621
-    
+processCode :: Int -> [Int] -> Int -> [Int] -> Base -> [Int]
+processCode input output ip program base =
+    case (head (drop ip program)) `mod` 100 of
+        1 -> sum1 program ip input output base
+        2 -> multiply program ip input output base
+        3 -> input' program ip input output base
+        4 -> output' program ip input output base
+        5 -> jumpIfTrue program ip input output base
+        6 -> jumpIfFalse program ip input output base
+        7 -> lessThan program ip input output base
+        8 -> equals program ip input output base
+        9 -> adjustBase program ip input output base
+        99 -> output
 
-    -- print $ "star 1: " ++ show (head (processCode 1 [] 0 program))
-    -- print $ "star 2: " ++ show (head (processCode 5 [] 0 program))
-    print $ "tests: " ++ show test1 ++ ", " ++ show test2
+  
 
--- processCode input output offset program
-processCode :: Int -> [Int] -> Int -> [Int] -> [Int]
-processCode input output offset program =
-    let instructionHead = head (drop offset program) 
-        opcode = instructionHead `mod` 10
-        modeParam1 = instructionHead `div` 100 `mod` 10
-        modeParam2 = instructionHead `div` 1000 `mod` 10
-    in
-        case (head (drop offset program)) `mod` 100 of
-            1 -> sum1 program offset input output
-            2 -> multiply program offset input output
-            3 -> input' program offset input output
-            4 -> output' program offset input output
-            5 -> jumpIfTrue program offset input output
-            6 -> jumpIfFalse program offset input output 
-            7 -> lessThan program offset input output
-            8 -> equals program offset input output
-            99 -> output
-
-input' :: [Int] -> Int -> Int -> [Int] -> [Int]              
-input' program ip input output =
-    let (a : b : xs) = drop ip program
-        newProgram = replaceNth b input program   
+adjustBase :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]
+adjustBase program ip input output base =
+    let 
+        param1 = getParam program ip 1 base
+        newBase = base + param1
     in 
-        processCode 0 output (ip + 2) newProgram
+        processCode input output (ip + 2) program newBase
 
 
-output' :: [Int] -> Int -> Int -> [Int] -> [Int]
-output' program ip input output =
-    let (a : b : xs) = drop ip program
+input' :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]             
+input' program ip input output base =
+    let 
+        newProgram = setAt program ip 1 input base
     in 
-        processCode 0 [program !!b] (ip + 2) program
+        processCode 0 output (ip + 2) newProgram base
 
 
-lessThan :: [Int] -> Int -> Int -> [Int] -> [Int] 
-lessThan program ip input output =
-    let param1 = getParam program ip 1
-        param2 = getParam program ip 2
-        param3 = (drop ip program) !! 3
+output' :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]
+output' program ip input output base =
+    let param1 = getParam program ip 1 base
+    in 
+        processCode 0 (output ++ [param1]) (ip + 2) program base
+
+
+lessThan :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]
+lessThan program ip input output base =
+    let param1 = getParam program ip 1 base
+        param2 = getParam program ip 2 base
         newValue = if param1 < param2 then 1 else 0
-        newProgram = replaceNth param3 newValue program
+        newProgram = setAt program ip 3 newValue base
     in
-        processCode input output (ip + 4) newProgram
+        processCode input output (ip + 4) newProgram base
 
 
-equals :: [Int] -> Int -> Int -> [Int] -> [Int]
-equals program ip input output =
-    let param1 = getParam program ip 1
-        param2 = getParam program ip 2
-        param3 = (drop ip program) !! 3
+equals :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]
+equals program ip input output base =
+    let param1 = getParam program ip 1 base
+        param2 = getParam program ip 2 base
         newValue = if param1 == param2 then 1 else 0
-        newProgram = replaceNth param3 newValue program
+        newProgram = setAt program ip 3 newValue base
     in
-        processCode input output (ip + 4) newProgram
+        processCode input output (ip + 4) newProgram base
 
 
-jumpIfTrue :: [Int] -> Int -> Int -> [Int] -> [Int] 
-jumpIfTrue program ip input output =
-    let param1 = getParam program ip 1
-        param2 = getParam program ip 2
+jumpIfTrue :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]
+jumpIfTrue program ip input output base =
+    let param1 = getParam program ip 1 base
+        param2 = getParam program ip 2 base
+
     in 
         if param1 /= 0 
-            then processCode input output param2 program
-        else processCode input output (ip + 3) program
+            then processCode input output param2 program base
+        else processCode input output (ip + 3) program base
 
 
-jumpIfFalse :: [Int] -> Int -> Int -> [Int] -> [Int]
-jumpIfFalse program ip input output =
-    let param1 = getParam program ip 1
-        param2 = getParam program ip 2
+jumpIfFalse :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]
+jumpIfFalse program ip input output base =
+    let param1 = getParam program ip 1 base
+        param2 = getParam program ip 2 base
     in 
         if param1 == 0 
-            then processCode input output param2 program
-        else processCode input output (ip + 3) program
+            then processCode input output param2 program base
+        else processCode input output (ip + 3) program base
 
 
 getMode :: Int -> Int -> Int
@@ -115,37 +109,35 @@ getMode instructionHead offset =
         3 -> (instructionHead `div` 10000) `mod` 10
 
 
-getParam :: [Int] -> Int -> Int -> Int
-getParam program ip offset =
+getParam :: [Int] -> Int -> Int -> Int -> Int
+getParam program ip offset base =
     let paramOffset = ip + offset
         instructionHead = head (drop ip program)
     in
         case getMode instructionHead offset of
             0 -> (program !! (program !! paramOffset))
             1 -> program !! paramOffset
+            2 -> (program !! ((program !! paramOffset) + base))
 
 
-sum1 :: [Int] -> Int -> Int -> [Int] -> [Int]
-sum1 program ip input output =
-    let param1 = getParam program ip 1
-        param2 = getParam program ip 2
-        param3 = (drop ip program) !! 3
+sum1 :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]
+sum1 program ip input output base =
+    let param1 = getParam program ip 1 base
+        param2 = getParam program ip 2 base
         calculated = param1 + param2
-        newProgram = replaceNth param3 calculated program
+        newProgram = setAt program ip 3 calculated base
     in
-        processCode input output (ip + 4) newProgram
+        processCode input output (ip + 4) newProgram base
 
 
-multiply :: [Int] -> Int -> Int -> [Int] -> [Int]
-multiply program ip input output =
-    let param1 = getParam program ip 1
-        param2 = getParam program ip 2
-        param3 = (drop ip program) !! 3
+multiply :: [Int] -> Int -> Int -> [Int] -> Base -> [Int]
+multiply program ip input output base =
+    let param1 = getParam program ip 1 base
+        param2 = getParam program ip 2 base
         calculated = param1 * param2
-            -- `debug` ("\nhello : " ++ show (ip))
-        newProgram = replaceNth param3 calculated program
+        newProgram = setAt program ip 3 calculated base
     in
-        processCode input output (ip + 4) newProgram
+        processCode input output (ip + 4) newProgram base
 
 
 replaceNth :: Int -> a -> [a] -> [a]
@@ -154,5 +146,14 @@ replaceNth n newVal (x:xs)
     | n == 0 = newVal:xs
     | otherwise = x:replaceNth (n-1) newVal xs
 
+setAt :: [Int] -> Int -> Int -> Int -> Int -> [Int]
+setAt program ip offset value base =
+    let instructionHead = head (drop ip program)
+        index = (drop ip program) !! offset
+    in 
+        case getMode instructionHead offset of
+            0 -> replaceNth index value program
+            2 -> replaceNth (index + base) value program
+        
 
 debug = flip trace
