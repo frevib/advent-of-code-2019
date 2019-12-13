@@ -1,11 +1,7 @@
-module Day07 where
+module Day10 where
 
--- import Data.Char
--- import Data.List.Split
 import Data.List
--- import qualified Data.Map as Map
 import qualified Data.Set as Set
--- import Data.Function
 import Debug.Trace
 import Data.Ratio
 
@@ -14,43 +10,39 @@ type Coord = (Int, Int)
 
 main :: IO ()
 main = do
-    input <- readFile "resources/day10.txt"
-    let planets = coordsList (lines input)
+  input <- readFile "resources/day10.txt"
+  let planets = coordsList (lines input)
 
     -- star1
-    let relativePlanetsNormalized = map (\planet ->  map (\x -> (fst x - fst planet, snd planet - snd x)) planets) planets
-    let relativePlanetsNormalizedWithoutSelf = map (\x -> filter (\y -> y /= (0,0)) x) relativePlanetsNormalized
-    
-    let allRatios = map (\x -> map (\y -> simplifyFraction y) x) relativePlanetsNormalized
-    let allRatiosWithoutSelf = map (\x -> filter (\y -> y /= (0,0)) x) allRatios
-    
-    let allRatiosWithoutSelfSet = map (\x -> Set.fromList x) allRatiosWithoutSelf
-    let star1 = last (sort (map length allRatiosWithoutSelfSet))
+  let relativePlanetsNormalized = map (\planet -> map (\x -> (fst x - fst planet, snd planet - snd x)) planets) planets
+  let relativePlanetsNormalizedWithoutSelf = map (filter (/= (0, 0))) relativePlanetsNormalized
+  let allRatios = map (map simplifyFraction) relativePlanetsNormalized
+  let allRatiosWithoutSelf = map (filter (/= (0, 0))) allRatios
+  let allRatiosWithoutSelfSet = map Set.fromList allRatiosWithoutSelf
+  let star1 = maximum (map length allRatiosWithoutSelfSet)
 
     -- star2
-    let (Just indexMaxPlanet) = elemIndex star1 (map length allRatiosWithoutSelfSet)
-    let maxPlanetCoord = planets !! indexMaxPlanet
-    
-    let maxPlanet = relativePlanetsNormalizedWithoutSelf !! indexMaxPlanet
-    let maxPlanetGrouped = groupByWholeList (\x y -> (simplifyFraction x) == (simplifyFraction y)) maxPlanet
-    
-    let maxPlanetSortGroupsInternally = 
-            map (\group -> sortBy (\(x1, x2) (y1, y2) -> compare (abs x1 + abs x2) (abs y1 + abs y2)) group) maxPlanetGrouped
-    let maxPlanetGroupedSortedByRatio = sortBy (\x y -> 
-                    let ratioA = head x
-                        ratioB = head y
-                        degreeA = toDegrees ratioA
-                        degreeB = toDegrees ratioB
-                    in
-                        compare degreeA degreeB
-                ) maxPlanetSortGroupsInternally
+  let (Just indexMaxPlanet) = elemIndex star1 (map length allRatiosWithoutSelfSet)
+  let maxPlanetCoord = planets !! indexMaxPlanet
+  let maxPlanet = relativePlanetsNormalizedWithoutSelf !! indexMaxPlanet
+  let maxPlanetGrouped = groupByWholeList (\x y -> (simplifyFraction x) == simplifyFraction y) maxPlanet
+  let maxPlanetSortGroupsInternally =
+        map (sortBy (\(x1, x2) (y1, y2) -> compare (abs x1 + abs x2) (abs y1 + abs y2))) maxPlanetGrouped
+  let maxPlanetGroupedSortedByRatio =
+        sortBy
+          (\x y ->
+             let ratioA = head x
+                 ratioB = head y
+                 degreeA = toDegrees ratioA
+                 degreeB = toDegrees ratioB
+              in compare degreeA degreeB)
+          maxPlanetSortGroupsInternally
+  let orderByFrontItems = foldl (\x y -> x ++ [head y]) [] maxPlanetGroupedSortedByRatio
+  let star2Coords = orderByFrontItems !! 199
+  let star2 = ((fst star2Coords + fst maxPlanetCoord) * 100) + (snd maxPlanetCoord - snd star2Coords)
 
-    let orderByFrontItems = foldl (\x y ->  x ++ [head y]) [] maxPlanetGroupedSortedByRatio
-    let star2Coords = orderByFrontItems !! 199
-    let star2 = ((fst star2Coords + fst maxPlanetCoord) * 100) + (snd maxPlanetCoord - snd star2Coords)
-
-    print $ "star1: " ++ show star1
-    print $ "star2: " ++ show star2
+  print $ "star1: " ++ show star1
+  print $ "star2: " ++ show star2
 
 
 toDegrees :: (Int, Int) -> Float
