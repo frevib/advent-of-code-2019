@@ -5,7 +5,6 @@ import qualified Data.Set as Set
 import Debug.Trace
 import Data.Ratio
 
-type Program = [Int] -> Int
 type Coord = (Int, Int)
 
 main :: IO ()
@@ -42,18 +41,19 @@ main = do
   print $ "star2: " ++ show star2
 
 
-toDegrees :: (Int, Int) -> Float
-toDegrees coord 
-    | (x < 0) && (y < 0) = degrees + 180
-    | (y < 0) = degrees + 180
-    | (x < 0) = degrees + 360
-    | otherwise = degrees
-    where x = fromIntegral (fst coord)
-          y = fromIntegral (snd coord)
-          degrees = atan (x/y) * (180/pi)
+toDegrees :: Coord -> Float
+toDegrees coord
+  | (x < 0) && (y < 0) = degrees + 180
+  | y < 0 = degrees + 180
+  | x < 0 = degrees + 360
+  | otherwise = degrees
+  where
+    x = fromIntegral (fst coord)
+    y = fromIntegral (snd coord)
+    degrees = atan (x / y) * (180 / pi)
 
 
-sortRadial :: (Int, Int) -> (Int, Int) -> Ordering
+sortRadial :: Coord -> Coord -> Ordering
 sortRadial x y
     | atan (a1/b1) > atan (a2/b2) = GT
     | atan (a1/b1) < atan (a2/b2) = LT
@@ -76,14 +76,14 @@ enumerate :: [a] -> [(Int, a)]
 enumerate = zip [0..] 
 
 
-coordsList :: [String] -> [(Int, Int)] 
+coordsList :: [String] -> [Coord]
 coordsList tiles =
     [(x, y)                              -- generate a Coord pair
         | (y, row) <- enumerate tiles    -- for each row with its coordinate
         , (x, tile) <- enumerate row     -- for each tile in the row (with coordinate)
         , tile == '#']
 
-simplifyFraction :: (Int, Int) -> (Int, Int)
+simplifyFraction :: Coord -> Coord
 simplifyFraction coord =
     if snd coord == 0
         then 
