@@ -12,7 +12,6 @@ main :: IO ()
 main = do
   input <- readFile "resources/day10.txt"
   let planets = coordsList (lines input)
-
     -- star1
   let relativePlanetsNormalized = map (\planet -> map (\x -> (fst x - fst planet, snd planet - snd x)) planets) planets
   let relativePlanetsNormalizedWithoutSelf = map (filter (/= (0, 0))) relativePlanetsNormalized
@@ -20,12 +19,11 @@ main = do
   let allRatiosWithoutSelf = map (filter (/= (0, 0))) allRatios
   let allRatiosWithoutSelfSet = map Set.fromList allRatiosWithoutSelf
   let star1 = maximum (map length allRatiosWithoutSelfSet)
-
     -- star2
   let (Just indexMaxPlanet) = elemIndex star1 (map length allRatiosWithoutSelfSet)
   let maxPlanetCoord = planets !! indexMaxPlanet
   let maxPlanet = relativePlanetsNormalizedWithoutSelf !! indexMaxPlanet
-  let maxPlanetGrouped = groupByWholeList (\x y -> (simplifyFraction x) == simplifyFraction y) maxPlanet
+  let maxPlanetGrouped = groupByWholeList (\x y -> simplifyFraction x == simplifyFraction y) maxPlanet
   let maxPlanetSortGroupsInternally =
         map (sortBy (\(x1, x2) (y1, y2) -> compare (abs x1 + abs x2) (abs y1 + abs y2))) maxPlanetGrouped
   let maxPlanetGroupedSortedByRatio =
@@ -40,7 +38,6 @@ main = do
   let orderByFrontItems = foldl (\x y -> x ++ [head y]) [] maxPlanetGroupedSortedByRatio
   let star2Coords = orderByFrontItems !! 199
   let star2 = ((fst star2Coords + fst maxPlanetCoord) * 100) + (snd maxPlanetCoord - snd star2Coords)
-
   print $ "star1: " ++ show star1
   print $ "star2: " ++ show star2
 
