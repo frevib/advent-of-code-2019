@@ -12,33 +12,33 @@ main :: IO ()
 main = do
     input <- readFile "resources/day06.txt"
     let inputLines = lines input
-    let edgesMap = 
-            inputLines 
-            & map (\x -> 
+    let edgesMap =
+            inputLines
+            & map (\x ->
                 let item = splitOn ")" x
                 in (last item, head item)
             )
             & Map.fromList
-    
+
     let diff_YOU_SAN =
-            length 
-            $ Set.difference 
-                (Set.fromList (pathToCOM (Just "YOU") edgesMap)) 
+            length
+            $ Set.difference
+                (Set.fromList (pathToCOM (Just "YOU") edgesMap))
                 (Set.fromList (pathToCOM (Just "SAN") edgesMap))
-             
+
     let diff_SAN_YOU =
             length
-            $ Set.difference 
-                (Set.fromList (pathToCOM (Just "SAN") edgesMap)) 
+            $ Set.difference
+                (Set.fromList (pathToCOM (Just "SAN") edgesMap))
                 (Set.fromList (pathToCOM (Just "YOU") edgesMap))
-        
-    print $ "star 1: " 
-        ++ show 
-            (foldl (\x y -> x + (length (pathToCOM y edgesMap))) 
-                0 
+
+    print $ "star 1: "
+        ++ show
+            (foldl (\x y -> x + (length (pathToCOM y edgesMap)))
+                0
                 (map Just (Map.keys edgesMap)))
     print $ "star 1: " ++ show (diff_YOU_SAN + diff_SAN_YOU)
-    
+
 
 pathToCOM :: Maybe String -> Map.Map String String -> [Maybe String]
 pathToCOM (Just key) edgesMap =
