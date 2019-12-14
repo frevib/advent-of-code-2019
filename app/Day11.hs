@@ -13,7 +13,7 @@ type Grid = Map.Map (Int, Int) Int
 type OutputGrid = Map.Map (Int, Int) Int
 type Position = (Int, Int)
 type Direction = (Int, Int)
-data RobotData = Grid Position Direction
+
 
 main :: IO ()
 main = do
